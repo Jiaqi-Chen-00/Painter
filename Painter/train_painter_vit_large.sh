@@ -2,6 +2,9 @@
 
 DATA_PATH=datasets
 name=painter_vit_large
+RANK=${RANK:-0}
+WORLD_SIZE=${WORLD_SIZE:-1}
+MASTER_ADDR=${MASTER_ADDR:-'localhost'}
 python -m torch.distributed.launch --nproc_per_node=8 \
 	--nnodes=${WORLD_SIZE} --node_rank=$RANK \
 	--master_addr=$MASTER_ADDR --master_port=12358 \
