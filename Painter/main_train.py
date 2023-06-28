@@ -21,7 +21,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 import timm
 
-# assert timm.__version__ == "0.3.2"  # version check
+assert timm.__version__ == "0.3.2"  # version check
 
 import util.lr_decay as lrd
 import util.misc as misc
@@ -194,34 +194,35 @@ def main(args, ds_init):
     cudnn.benchmark = True
 
     # define the model
-    model = models_painter.__dict__[args.model]()
-
-    if args.finetune:
-        checkpoint = torch.load(args.finetune, map_location='cpu')
-
-        print("Load pre-trained checkpoint from: %s" % args.finetune)
-        checkpoint_model = checkpoint['model']
-        state_dict = model.state_dict()
-        rm_key_list = ['decoder_embed.weight', 'decoder_embed.bias',  'mask_token']
-        if args.last_norm_instance:
-            rm_key_list.extend(['norm.weight', 'norm.bias'])
-        for k in rm_key_list:
-            if k in checkpoint_model and checkpoint_model[k].shape != state_dict[k].shape:
-                print(f"Removing key {k} from pretrained checkpoint")
-                del checkpoint_model[k]
-        # interpolate patch embedding
-        if "patch32" in args.model:
-            patch_weight = checkpoint['model']['patch_embed.proj.weight']
-            new_patch_weight = torch.nn.functional.interpolate(patch_weight, size=(32, 32), mode='bicubic', align_corners=False)
-            checkpoint['model']['patch_embed.proj.weight'] = new_patch_weight
-
-        # interpolate position embedding
-        if "painter" not in args.model:
-            interpolate_pos_embed(model, checkpoint_model)
-
-        # load pre-trained model
-        msg = model.load_state_dict(checkpoint_model, strict=False)
-        print(msg)
+    # model = models_painter.__dict__[args.model]()
+    from segment_anything import build_sam, SamPredictor, build_sam_vit_b
+    model = build_sam_vit_b(checkpoint="../../segment-anything/ckp/sam_vit_b_01ec64.pth")
+    # if args.finetune:
+    #     checkpoint = torch.load(args.finetune, map_location='cpu')
+    #
+    #     print("Load pre-trained checkpoint from: %s" % args.finetune)
+    #     checkpoint_model = checkpoint['model']
+    #     state_dict = model.state_dict()
+    #     rm_key_list = ['decoder_embed.weight', 'decoder_embed.bias',  'mask_token']
+    #     if args.last_norm_instance:
+    #         rm_key_list.extend(['norm.weight', 'norm.bias'])
+    #     for k in rm_key_list:
+    #         if k in checkpoint_model and checkpoint_model[k].shape != state_dict[k].shape:
+    #             print(f"Removing key {k} from pretrained checkpoint")
+    #             del checkpoint_model[k]
+    #     # interpolate patch embedding
+    #     if "patch32" in args.model:
+    #         patch_weight = checkpoint['model']['patch_embed.proj.weight']
+    #         new_patch_weight = torch.nn.functional.interpolate(patch_weight, size=(32, 32), mode='bicubic', align_corners=False)
+    #         checkpoint['model']['patch_embed.proj.weight'] = new_patch_weight
+    #
+    #     # interpolate position embedding
+    #     if "painter" not in args.model:
+    #         interpolate_pos_embed(model, checkpoint_model)
+    #
+    #     # load pre-trained model
+    #     msg = model.load_state_dict(checkpoint_model, strict=False)
+    #     print(msg)
 
     patch_size = model.patch_size
     print("Patch size = %s" % str(patch_size))

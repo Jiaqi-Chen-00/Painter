@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DATA_PATH=datasets
+DATA_PATH=toy_datasets
 name=painter_vit_large
 RANK=${RANK:-0}
 WORLD_SIZE=${WORLD_SIZE:-1}
@@ -9,8 +9,8 @@ python -m torch.distributed.launch --nproc_per_node=8 \
 	--nnodes=${WORLD_SIZE} --node_rank=$RANK \
 	--master_addr=$MASTER_ADDR --master_port=12358 \
 	--use_env main_train.py  \
-    --batch_size 2 \
-    --accum_iter 16  \
+    --batch_size 1 \
+    --accum_iter 1  \
     --model painter_vit_large_patch16_input896x448_win_dec64_8glb_sl1 \
     --num_mask_patches 784 \
     --max_mask_patches_per_block 392 \
@@ -43,6 +43,6 @@ python -m torch.distributed.launch --nproc_per_node=8 \
     $DATA_PATH/light_enhance/enhance_lol_val.json \
     --output_dir models/$name \
     --log_dir models/$name/logs \
-    --finetune path/to/mae_pretrain_vit_large.pth \
+    --finetune ckp/mae_pretrain_vit_large.pth \
     # --log_wandb \
 
